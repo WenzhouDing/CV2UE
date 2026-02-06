@@ -93,14 +93,14 @@ Apply it to both rotation and translation:
 
 $$
 \begin{aligned}
-\mathbf{R}_{WU_{\text{cam}}}^{\text{LH}} &= \mathbf{S} \, \mathbf{R}_{WU_{\text{cam}}}^{\text{RH}} \, \mathbf{S} \\
+\mathbf{R}_{WU_{\text{cam}}}^{\text{LH}} &= \mathbf{S} \, \mathbf{R}_{WU_{\text{cam}}}^{\text{RH}} \\
 \mathbf{t}_{WU_{\text{cam}}}^{\text{LH}} &= \mathbf{S} \, \mathbf{t}_{WU_{\text{cam}}}^{\text{RH}}
 \end{aligned}
 $$
 
-**Why the sandwich $\mathbf{S} \mathbf{R} \mathbf{S}$?** The left $\mathbf{S}$ flips the world-frame rows (how each world axis is expressed), and the right $\mathbf{S}$ flips the body-frame columns (the camera's local Y axis). Together they negate every element that touches the Y axis — exactly what switching handedness requires.
+**Why only a left-multiply by $\mathbf{S}$, not a sandwich $\mathbf{S} \mathbf{R} \mathbf{S}$?** The sandwich form is correct when an operator maps *within* a single coordinate system (both input and output live in the same space being flipped). Here, however, $\mathbf{R}_{WU_{\text{cam}}}^{\text{RH}}$ maps *between two different frames*: the UE camera frame on the right and the RH world on the left. Only the **world** side is changing (RH → LH via $\mathbf{S}$); the camera side was already converted to UE convention by $\mathbf{R}_{ue \rightarrow cv}$ in Step 1. So we apply $\mathbf{S}$ only on the left.
 
-**Why $\mathbf{S} \mathbf{t}$?** The camera's physical position is the same, but the Y coordinate must be negated to express it in the left-handed world. This step flips the sign of the **Y component** of both the rotation axes and the translation, producing a left-handed transform.
+**Why $\mathbf{S} \mathbf{t}$?** The camera's physical position is the same, but the Y coordinate must be negated to express it in the left-handed world.
 
 ### Step 3: Final Result (Unreal Transform)
 
@@ -113,7 +113,7 @@ $$
 \end{bmatrix}
 $$
 
-where $\mathbf{R}_{WU_{\text{cam}}}^{\text{LH}} \in \mathbb{R}^{3 \times 3}$ is a left-handed rotation ($\det(\mathbf{R}_{WU_{\text{cam}}}^{\text{LH}}) = -1$) and $\mathbf{t}_{WU_{\text{cam}}}^{\text{LH}} \in \mathbb{R}^3$ is the camera position in the left-handed world.
+where $\mathbf{R}_{WU_{\text{cam}}}^{\text{LH}} \in \mathbb{R}^{3 \times 3}$ is a proper rotation ($\det(\mathbf{R}_{WU_{\text{cam}}}^{\text{LH}}) = +1$) and $\mathbf{t}_{WU_{\text{cam}}}^{\text{LH}} \in \mathbb{R}^3$ is the camera position in the left-handed world.
 
 Columns of $\mathbf{R}_{WU_{\text{cam}}}^{\text{LH}}$:
 
@@ -129,7 +129,7 @@ Combining both steps:
 
 $$
 \begin{aligned}
-\mathbf{R}_{WU_{\text{cam}}}^{\text{LH}} &= \mathbf{S} \, \mathbf{R}_{WC}^{\text{RH}} \, \mathbf{R}_{ue \rightarrow cv} \, \mathbf{S} \\
+\mathbf{R}_{WU_{\text{cam}}}^{\text{LH}} &= \mathbf{S} \, \mathbf{R}_{WC}^{\text{RH}} \, \mathbf{R}_{ue \rightarrow cv} \\
 \mathbf{t}_{WU_{\text{cam}}}^{\text{LH}} &= \mathbf{S} \, \mathbf{t}_{WC}
 \end{aligned}
 $$
@@ -174,9 +174,9 @@ $$\det(\mathbf{R}_{WC}^{\text{RH}}) = +1.0 \quad \text{(right-handed)}$$
 
 $$
 \mathbf{R}_{WU_{\text{cam}}}^{\text{LH}} = \begin{bmatrix}
--0.4467 & 0.6363 & 0.6289 \\
-0.7341 & -0.1411 & 0.6642 \\
--0.5114 & -0.7584 & 0.4041
+-0.4467 & -0.6363 & 0.6289 \\
+0.7341 & 0.1411 & 0.6642 \\
+-0.5114 & 0.7584 & 0.4041
 \end{bmatrix}
 \qquad
 \mathbf{t}_{WU_{\text{cam}}}^{\text{LH}} = \begin{bmatrix}
@@ -186,7 +186,7 @@ $$
 \end{bmatrix}
 $$
 
-$$\det(\mathbf{R}_{WU_{\text{cam}}}^{\text{LH}}) = -1.0 \quad \text{(left-handed)}$$
+$$\det(\mathbf{R}_{WU_{\text{cam}}}^{\text{LH}}) = +1.0 \quad \text{(proper rotation)}$$
 
 ## Sanity Checks
 
@@ -195,7 +195,7 @@ The conversion preserves physical geometry:
 | Check                              | Status |
 |------------------------------------|--------|
 | Inter-camera distances unchanged   | pass   |
-| det(R) flips from +1 to -1        | pass   |
+| det(R) remains +1 (proper rotation)| pass   |
 | Position Y-component negated       | pass   |
 
 ## Files
@@ -221,7 +221,7 @@ Each `*_ue.json` contains:
   "position_m":  { "x": 0.022, "y": 0.123, "z": 0.06 },
   "rotation_deg": { "roll": 119.83, "pitch": 30.76, "yaw": 121.32 },
   "rotation_matrix": [[ ... ]],
-  "rotation_matrix_det": -1.0,
+  "rotation_matrix_det": 1.0,
   "transform_4x4": [[ ... ]]
 }
 ```

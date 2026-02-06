@@ -19,7 +19,7 @@ Derivation (see derive_from_scratch.md):
 
   Step 2: Handedness flip  — RH world → LH world (negate Y)
           S = diag(1, -1, 1)
-          R_LH = S @ R_remapped @ S
+          R_LH = S @ R_remapped
           t_LH = S @ t_remapped
 """
 
@@ -54,7 +54,7 @@ def opencv_rh_to_ue_lh(R_wc, t_wc):
 
     Returns
     -------
-    R_lh : (3,3) rotation matrix, camera-to-world, left-handed (det ≈ -1)
+    R_lh : (3,3) rotation matrix, camera-to-world, left-handed (det ≈ +1)
     t_lh : (3,)  translation vector (meters), camera position in LH world
     """
     # Step 1 – axis remap (OpenCV cam → UE actor frame, still RH)
@@ -73,7 +73,7 @@ def opencv_rh_to_ue_lh(R_wc, t_wc):
 
     # Step 2 – handedness flip (negate Y to go RH → LH)
     S = np.diag([1.0, -1.0, 1.0])
-    R_lh = S @ R_remapped @ S
+    R_lh = S @ R_remapped
     t_lh = S @ t_remapped
 
     return R_lh, t_lh
